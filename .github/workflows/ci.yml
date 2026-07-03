@@ -1,0 +1,21 @@
+#Goal is To build the image and push it to docker hub
+name: CI
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  build and push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout/clone the code
+        uses: actions/checkout@v7
+
+      - name: Docker setup [Login]
+        uses: docker/login-action@v4
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Docker Build
