@@ -1,16 +1,36 @@
-# Stage 1 — build the app into static files
-FROM node:20-alpine AS build
-WORKDIR /app
+#Stage1-Builder stage - used to build the package and app
+
+FROM node:24-alpine as builder
+
+#This will create a folder myapp and make it as pwd
+WORKDIR /myapp
+
+# Cache dependencies: Copy ONLY package files first
 COPY package*.json ./
+
+# Install ALL dependencies (including devDependencies like Vite/TypeScript)
 RUN npm ci
+
+#This will copy all the code 
 COPY . .
+
+#This will create dist folder 
 RUN npm run build
 
-# Stage 2 — small image that only serves the build (no nginx)
-FROM node:20-alpine
-WORKDIR /app
-RUN npm install -g vite@5 && npm cache clean --force
-COPY --from=build /app/dist ./dist
+#---------stage 1 complete---------------------------
+
+#This is satge 2 (Runner stage) - used to run the application from the builder stage
+
+FROM node:24-alpine
+
+WORKDIR /myapp
+
+COPY package*.json ./
+
+RUN npm install -g vite
+
+COPY --from=builder /myapp/dist ./dist
+
 COPY vite.preview.config.js ./vite.config.js
-EXPOSE 4173
+
 CMD ["vite", "preview", "--host", "0.0.0.0", "--port", "4173"]
